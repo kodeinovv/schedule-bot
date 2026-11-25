@@ -96,32 +96,18 @@ def get_schedule_text(action):
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    markup = InlineKeyboardMarkup(row_width=2)
-    markup.add(
-        InlineKeyboardButton("📅 Сегодня", callback_data="today"),
-        InlineKeyboardButton("📅 Завтра", callback_data="tomorrow"),
-        InlineKeyboardButton("🗓 На неделю", callback_data="week")
-    )
-    bot.send_message(message.chat.id, "Привет! Выбери день:", reply_markup=markup)
-
-@bot.callback_query_handler(func=lambda call: call.data in ['today', 'tomorrow', 'week'])
-def callback_schedule(call):
-    bot.answer_callback_query(call.id, "Загружаю...")
-    schedule_text = get_schedule_text(call.data)
-    
-    if len(schedule_text) > 4000:
-        chunks = schedule_text.split('\n📅 ')
-        current_chunk = "📅 " + chunks[0] if chunks[0] else ""
-        for chunk in chunks[1:]:
-            if len(current_chunk) + len(chunk) > 4000:
-                bot.send_message(call.message.chat.id, current_chunk, parse_mode='HTML')
-                current_chunk = "📅 " + chunk
-            else:
-                current_chunk += "\n📅 " + chunk
-        if current_chunk:
-            bot.send_message(call.message.chat.id, current_chunk, parse_mode='HTML')
-    else:
-        bot.send_message(call.message.chat.id, schedule_text, parse_mode='HTML')
+    print(f"ОТЛАДКА: Получена команда /start от {message.chat.id}")
+    try:
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.add(
+            InlineKeyboardButton("📅 Сегодня", callback_data="today"),
+            InlineKeyboardButton("📅 Завтра", callback_data="tomorrow"),
+            InlineKeyboardButton("🗓 На неделю", callback_data="week")
+        )
+        bot.send_message(message.chat.id, "Привет! Выбери день:", reply_markup=markup)
+        print("ОТЛАДКА: Сообщение успешно отправлено!")
+    except Exception as e:
+        print(f"ОТЛАДКА ОШИБКА ОТПРАВКИ: {e}")
 
 # --- ВЕБ-СЕРВЕР ---
 @app.route('/', methods=['GET'])
@@ -130,11 +116,12 @@ def index():
 
 @app.route('/' + BOT_TOKEN, methods=['POST'])
 def getMessage():
+    print("ОТЛАДКА: Получен POST-запрос от Telegram!")
     try:
         update = telebot.types.Update.de_json(request.get_data().decode('utf-8'))
         bot.process_new_updates([update])
         return "!", 200
     except Exception as e:
-        print("ОШИБКА ПРИ ОБРАБОТКЕ СООБЩЕНИЯ:")
+        print("ОТЛАДКА ОШИБКА ОБРАБОТКИ:")
         print(traceback.format_exc())
         return "Error", 500
