@@ -2,6 +2,8 @@ import telebot
 import requests
 import re
 import datetime
+import os
+from flask import Flask, request
 from bs4 import BeautifulSoup
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -10,6 +12,7 @@ BOT_TOKEN = '9118032841:AAEUyIqUxUFYmFRm2GKnyW2WDEReWVEUD7k'
 SCHEDULE_URL = 'http://techn.sstu.ru/schedule/spo_2026/cg22.htm'
 
 bot = telebot.TeleBot(BOT_TOKEN)
+app = Flask(__name__)
 
 # --- ПАРСЕР ---
 def get_schedule_text(action):
@@ -151,5 +154,24 @@ def callback_schedule(call):
     else:
         bot.send_message(call.message.chat.id, schedule_text, parse_mode='HTML')
 
-print("Бот запущен и работает!")
-bot.infinity_polling()
+# --- ВЕБ-СЕРВЕР ДЛЯ RENDER ---
+@app.route('/' + BOT_TOKEN, methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
+
+@app.route("/")
+def webhook():
+    bot.remove_webhook()
+    render_url = os.environ.get('RENDER_EXTERNAL_URL', '')
+    if render_url:
+        bot.set_webhook(url=f"{render_url}/{BOT_TOKEN}")
+    return "Webhook set!", 200
+
+if __name__ == "__main__":
+    bot.remove_webhook()
+    render_url = os.environ.get('RENDER_EXTERNAL_URL', '')
+    if render_url:
+        bot.set_webhook(url=f"{render_url}/{B
