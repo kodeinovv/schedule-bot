@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # --- НАСТРОЙКИ ---
-BOT_TOKEN = '9118032841:AAEUyIqUxUFYmFRm2GKnyW2WDEReWVEUD7k'
+BOT_TOKEN = '9118032841:AAH3VxWpIgBWm3DT-hqD42uinFMvMYYR-2c'
 SCHEDULE_URL = 'http://techn.sstu.ru/schedule/spo_2026/cg22.htm'
 
 bot = telebot.TeleBot(BOT_TOKEN)
