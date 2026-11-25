@@ -61,7 +61,11 @@ def get_schedule_text(action):
                                 subject_info += f"\n    ➡ {cell_texts[2]}"
                             days_data[current_date].append(f"🔹 <b>{time_info}</b>\n    {subject_info}")
         
-        today = datetime.datetime.now()
+        # --- ИСПРАВЛЕНИЕ ЧАСОВОГО ПОЯСА ---
+        # Берем время UTC (Лондон) и прибавляем 4 часа (Саратов).
+        # Если у тебя московское время, поменяй на hours=3
+        today = datetime.datetime.utcnow() + datetime.timedelta(hours=4)
+        
         today_str = today.strftime('%d.%m.%Y')
         tomorrow_str = (today + datetime.timedelta(days=1)).strftime('%d.%m.%Y')
         
@@ -96,7 +100,6 @@ def get_schedule_text(action):
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    print(f"ОТЛАДКА: Получена команда /start от {message.chat.id}", flush=True)
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
         InlineKeyboardButton("📅 Сегодня", callback_data="today"),
@@ -124,13 +127,11 @@ def callback_schedule(call):
     else:
         bot.send_message(call.message.chat.id, schedule_text, parse_mode='HTML')
 
-# --- ЗАПУСК БОТА В ФОНЕ (Вне __main__) ---
+# --- ЗАПУСК БОТА В ФОНЕ ---
 def run_bot():
-    print("ОТЛАДКА: Запуск бота в фоне (Polling)...", flush=True)
     bot.remove_webhook()
     bot.infinity_polling()
 
-# Запускаем поток сразу при загрузке файла
 threading.Thread(target=run_bot, daemon=True).start()
 
 # --- ВЕБ-СЕРВЕР ---
