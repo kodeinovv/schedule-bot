@@ -3,12 +3,13 @@ import requests
 import re
 import datetime
 import os
+import traceback
 from flask import Flask, request
 from bs4 import BeautifulSoup
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 # --- НАСТРОЙКИ ---
-BOT_TOKEN = '9118032841:AAEUyIqUxUFYmFRm2GKnyW2WDEReWVEUD7k'
+BOT_TOKEN = 'ВСТАВЬ_СЮДА_СВОЙ_ТОКЕН'
 SCHEDULE_URL = 'http://techn.sstu.ru/schedule/spo_2026/cg22.htm'
 
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -123,16 +124,17 @@ def callback_schedule(call):
         bot.send_message(call.message.chat.id, schedule_text, parse_mode='HTML')
 
 # --- ВЕБ-СЕРВЕР ---
+@app.route('/', methods=['GET'])
+def index():
+    return "Bot is running!", 200
+
 @app.route('/' + BOT_TOKEN, methods=['POST'])
 def getMessage():
-    update = telebot.types.Update.de_json(request.get_data().decode('utf-8'))
-    bot.process_new_updates([update])
-    return "!", 200
-
-@app.route("/")
-def webhook():
-    bot.remove_webhook()
-    render_url = os.environ.get('RENDER_EXTERNAL_URL', '')
-    if render_url:
-        bot.set_webhook(url=f"{render_url}/{BOT_TOKEN}")
-    return "Webhook set!", 200
+    try:
+        update = telebot.types.Update.de_json(request.get_data().decode('utf-8'))
+        bot.process_new_updates([update])
+        return "!", 200
+    except Exception as e:
+        print("ОШИБКА ПРИ ОБРАБОТКЕ СООБЩЕНИЯ:")
+        print(traceback.format_exc())
+        return "Error", 500
