@@ -4,7 +4,6 @@ import re
 import datetime
 import os
 import threading
-import sys
 from flask import Flask
 from bs4 import BeautifulSoup
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -125,26 +124,19 @@ def callback_schedule(call):
     else:
         bot.send_message(call.message.chat.id, schedule_text, parse_mode='HTML')
 
+# --- ЗАПУСК БОТА В ФОНЕ (Вне __main__) ---
+def run_bot():
+    print("ОТЛАДКА: Запуск бота в фоне (Polling)...", flush=True)
+    bot.remove_webhook()
+    bot.infinity_polling()
+
+# Запускаем поток сразу при загрузке файла
+threading.Thread(target=run_bot, daemon=True).start()
+
 # --- ВЕБ-СЕРВЕР ---
 @app.route('/', methods=['GET'])
 def index():
     return "Bot is running!", 200
 
-# --- ЗАПУСК В ФОНЕ ---
-def run_bot():
-    print("ОТЛАДКА: Поток бота запущен, начинаю Polling...", flush=True)
-    try:
-        bot.remove_webhook()
-        print("ОТЛАДКА: Вебхук удален. Слушаю сообщения...", flush=True)
-        bot.infinity_polling(timeout=10, long_polling_timeout=5)
-    except Exception as e:
-        print(f"ОТЛАДКА КРИТИЧЕСКАЯ ОШИБКА БОТА: {e}", flush=True)
-
 if __name__ == "__main__":
-    print("ОТЛАДКА: Запуск главного скрипта...", flush=True)
-    t = threading.Thread(target=run_bot)
-    t.daemon = True
-    t.start()
-    
-    print("ОТЛАДКА: Запуск Flask сервера...", flush=True)
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
